@@ -1,7 +1,9 @@
 package com.xut.domain.model
 
+import androidx.annotation.StringRes
+
 data class Region(
-    val name: String,
+    @StringRes val labelId: Int,
     val host: String
 )
 

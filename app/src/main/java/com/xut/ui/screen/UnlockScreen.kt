@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xut.Constants
 import com.xut.R
-import com.xut.domain.model.User
 import com.xut.ui.viewmodel.UnlockState
 import com.xut.ui.viewmodel.UnlockViewModel
 import kotlinx.coroutines.launch
@@ -67,10 +67,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun UnlockScreen(
     modifier: Modifier = Modifier,
-    user: User,
     unlockState: UnlockState,
-    onClearUserClick: () -> Unit,
-    onUnlockClick: (User, String, String, String) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
@@ -78,10 +75,11 @@ fun UnlockScreen(
     val clipboardManager = LocalClipboardManager.current
     val uriHandler = LocalUriHandler.current
 
-    val regions = Constants.regions.map { it.name }
+    val regions = Constants.regions.map { it.labelId }
     val hosts = Constants.regions.map { it.host }
+
     var expandedRegion by remember { mutableStateOf(false) }
-    var selectedRegion by rememberSaveable { mutableStateOf(regions[0]) }
+    var selectedRegion by rememberSaveable { mutableIntStateOf(regions[0]) }
     var host by rememberSaveable { mutableStateOf(hosts[0]) }
     var product by rememberSaveable { mutableStateOf("") }
     var token by rememberSaveable { mutableStateOf("") }
@@ -113,8 +111,8 @@ fun UnlockScreen(
 
                     navigationIcon = {
                         IconButton(
-                            enabled = !unlockState.isRunning,
-                            onClick = onClearUserClick
+                            enabled = unlockState !is UnlockState.Running,
+                            onClick = {}
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_logout),
@@ -127,17 +125,17 @@ fun UnlockScreen(
                         IconButton(
                             enabled = product.isNotEmpty() && token.isNotEmpty(),
                             onClick = {
-                                onUnlockClick(user, host, product, token)
+
                             }) {
                             Icon(
-                                imageVector = if (unlockState.isRunning) Icons.Outlined.Clear else Icons.Outlined.PlayArrow,
+                                imageVector = if (unlockState is UnlockState.Running) Icons.Outlined.Clear else Icons.Outlined.PlayArrow,
                                 contentDescription = null
                             )
                         }
 
-                        IconButton(enabled = unlockState.token != null, onClick = {
+                        IconButton(enabled = unlockState !is UnlockState.Running, onClick = {
                             coroutineScope.launch {
-                                clipboardManager.setText(AnnotatedString(unlockState.token!!))
+//                                clipboardManager.setText(AnnotatedString(unlockState.))
                                 snackbarHostState.showSnackbar("Copied unlock token to clipboard")
                             }
                         }) {
@@ -159,7 +157,7 @@ fun UnlockScreen(
                         }
                     })
 
-                if (unlockState.isRunning) {
+                if (unlockState is UnlockState.Running) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
@@ -189,7 +187,7 @@ fun UnlockScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                        value = selectedRegion,
+                        value = stringResource(selectedRegion),
                         onValueChange = { },
                         readOnly = true,
                         singleLine = true,
@@ -203,9 +201,9 @@ fun UnlockScreen(
                         onDismissRequest = { expandedRegion = false }) {
                         regions.forEachIndexed { index, region ->
                             DropdownMenuItem(
-                                enabled = !unlockState.isRunning,
+                                enabled = unlockState !is UnlockState.Running,
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                text = { Text(region, style = MaterialTheme.typography.bodyLarge) },
+                                text = { Text(text = stringResource(region), style = MaterialTheme.typography.bodyLarge) },
                                 onClick = {
                                     selectedRegion = region
                                     host = hosts[index]
@@ -218,7 +216,7 @@ fun UnlockScreen(
 
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !unlockState.isRunning,
+                    enabled = unlockState !is UnlockState.Running,
                     value = product,
                     onValueChange = { product = it },
                     singleLine = true,
@@ -230,7 +228,7 @@ fun UnlockScreen(
 
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !unlockState.isRunning,
+                    enabled = unlockState !is UnlockState.Running,
                     value = token,
                     onValueChange = { token = it },
                     maxLines = 4,
@@ -240,14 +238,16 @@ fun UnlockScreen(
                     colors = TextFieldDefaults.colors()
                 )
 
-                unlockState.output?.let { output ->
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontFamily = FontFamily.Monospace,
-                        text = output,
-                    )
-                }
+               if (unlockState is UnlockState.Idle) (
+                   unlockState.results.forEach { line->
+                       Text(
+                           modifier = Modifier.fillMaxWidth(),
+                           style = MaterialTheme.typography.bodyMedium,
+                           fontFamily = FontFamily.Monospace,
+                           text = line,
+                       )
+                   }
+               )
             }
         }
     }

@@ -37,12 +37,12 @@ class UnlockRequest private constructor(
         params = params.sorted()
 
         try {
-            UnlockCrypto.encryptRequestParams(auth.ssecurity, params)
+            UnlockCrypto.encryptRequestParams(auth.ssecurity!!, params)
         } catch (e: Exception) {
             throw UnlockException("Cannot encrypt post params: ${e.message}")
         }
 
-        val signSha = UnlockCrypto.signSha1(auth.ssecurity, "POST", path, params.toString())
+        val signSha = UnlockCrypto.signSha1(auth.ssecurity!!, "POST", path, params.toString())
         params.put("signature", signSha)
 
         val client = OkHttpClient()
@@ -57,10 +57,10 @@ class UnlockRequest private constructor(
             .build()
 
         val cookiesMap = linkedMapOf(
-            "serviceToken" to auth.serviceToken,
-            "userId" to auth.userId,
-            "unlockApi_slh" to auth.slh,
-            "unlockApi_ph" to auth.ph
+            "serviceToken" to auth.serviceToken!!,
+            "userId" to auth.userId!!,
+            "unlockApi_slh" to auth.slh!!,
+            "unlockApi_ph" to auth.ph!!
         )
 
         val formBody = FormBody.Builder().apply {
@@ -83,7 +83,7 @@ class UnlockRequest private constructor(
             }
 
             try {
-                body = UnlockCrypto.decrypt(auth.ssecurity, body)
+                body = UnlockCrypto.decrypt(auth.ssecurity!!, body)
             } catch (e: Exception) {
                 throw UnlockException("Cannot decrypt response data: ${e.message}")
             }

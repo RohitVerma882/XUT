@@ -2,13 +2,16 @@ package com.xut
 
 import android.content.Context
 
-import com.xut.data.UserRepositoryImpl
-import com.xut.domain.repository.UserRepository
+import com.xut.data.AuthRepositoryImpl
+import com.xut.domain.repository.AuthRepository
+import com.xut.util.AuthManager
 
 interface AppContainer {
-    val userRepository: UserRepository
+    val authManager: AuthManager
+    val authRepository: AuthRepository
 }
 
 class AppContainerImpl(private val context: Context) : AppContainer {
-    override val userRepository: UserRepository get() = UserRepositoryImpl(context)
+    override val authManager: AuthManager get() = AuthManager.getInstance(context)
+    override val authRepository: AuthRepository get() = AuthRepositoryImpl()
 }

@@ -13,16 +13,6 @@ object Aes {
     private const val TRANSFORMATION = "$ALGORITHM/$BLOCK_MODE/$PADDING"
 
     @Throws(Exception::class)
-    fun aes128CbcEncrypt(key: ByteArray, iv: ByteArray, data: ByteArray): ByteArray {
-        return aes128CbcEncryptDecrypt(Cipher.ENCRYPT_MODE, key, iv, data)
-    }
-
-    @Throws(Exception::class)
-    fun aes128CbcDecrypt(key: ByteArray, iv: ByteArray, data: ByteArray): ByteArray {
-        return aes128CbcEncryptDecrypt(Cipher.DECRYPT_MODE, key, iv, data)
-    }
-
-    @Throws(Exception::class)
     private fun aes128CbcEncryptDecrypt(
         mode: Int,
         key: ByteArray,
@@ -34,5 +24,15 @@ object Aes {
         val ivSpec = IvParameterSpec(iv)
         cipher.init(mode, keySpec, ivSpec)
         return cipher.doFinal(data)
+    }
+
+    @Throws(Exception::class)
+    fun aes128CbcEncrypt(key: ByteArray, iv: ByteArray, data: ByteArray): ByteArray {
+        return aes128CbcEncryptDecrypt(Cipher.ENCRYPT_MODE, key, iv, data)
+    }
+
+    @Throws(Exception::class)
+    fun aes128CbcDecrypt(key: ByteArray, iv: ByteArray, data: ByteArray): ByteArray {
+        return aes128CbcEncryptDecrypt(Cipher.DECRYPT_MODE, key, iv, data)
     }
 }

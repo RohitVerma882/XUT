@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.webkit.CookieManager
-import android.webkit.JavascriptInterface
 import android.webkit.WebView
 
 import androidx.activity.compose.BackHandler
@@ -19,7 +18,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,42 +26,35 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import androidx.webkit.WebViewClientCompat
 
-import com.xut.Constants
-import com.xut.domain.model.User
+import com.xut.Constants.LOGIN_URL
+import com.xut.util.AuthManager
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onSaveUser: (User) -> Unit
+    onLoginSuccess: () -> Unit
 ) {
-    val currentOnSaveUser by rememberUpdatedState(onSaveUser)
-
-    LaunchedEffect(Unit) {
-        CookieManager.getInstance().apply {
-            removeSessionCookies(null)
-            removeAllCookies(null)
-            flush()
-        }
-    }
+    val cookieManager = CookieManager.getInstance()
+    val authManager = AuthManager.getInstance(LocalContext.current)
 
     var webView by remember { mutableStateOf<WebView?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var canGoBack by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = canGoBack) {
-        webView?.goBack()
+    LaunchedEffect(Unit) {
+        if (authManager.isLoggedIn.not()) {
+            cookieManager.apply {
+                removeSessionCookies(null)
+                removeAllCookies(null)
+                flush()
+            }
+            webView?.loadUrl(LOGIN_URL)
+        }
     }
 
-    @Suppress("unused")
-    class WebAppInterface {
-        @JavascriptInterface
-        fun onLoginSuccess(passToken: String, userId: String, deviceId: String) {
-            val user = User(passToken, userId, deviceId)
-            if (user.hasValues) {
-                currentOnSaveUser(user)
-            }
-        }
+    BackHandler(enabled = canGoBack) {
+        webView?.goBack()
     }
 
     val webViewClient = object : WebViewClientCompat() {
@@ -83,57 +74,36 @@ fun LoginScreen(
             super.onPageFinished(view, url)
             isLoading = false
 
-            val jsCode = """
-                    javascript:(function() {
-                        var passToken = '';
-                        var userId = '';
-                        var deviceId = '';
+            cookieManager
+                .getCookie(LOGIN_URL)
+                ?.split(";")
+                ?.map { it.trim() }
+                ?.forEach { cookie ->
+                    val parts = cookie.split("=", limit = 2)
+                    if (parts.size == 2) {
+                        val name = parts.getOrNull(0)
+                        val value = parts.getOrNull(1)
 
-                        document.cookie.split(';').forEach(function(cookie) {
-                            var parts = cookie.trim().split('=', 2);
-                            if (parts.length === 2) {
-                                if (parts[0] === 'passToken') passToken = parts[1];
-                                if (parts[0] === 'userId') userId = parts[1];
-                                if (parts[0] === 'deviceId') deviceId = parts[1];
+                        when (name) {
+                            AuthManager.PASS_TOKEN -> {
+                                authManager.setPassToken(value!!)
                             }
-                        });
 
-                        if (passToken && userId && deviceId) {
-                            AndroidInterface.onLoginSuccess(passToken, userId, deviceId);
+                            AuthManager.USER_ID -> {
+                                authManager.setUserId(value!!)
+                            }
+
+                            AuthManager.DEVICE_ID -> {
+                                authManager.setDeviceId(value!!)
+                            }
                         }
-                    })();
-                """.trimIndent()
-            view?.evaluateJavascript(jsCode, null)
 
-//            CookieManager.getInstance()
-//                .getCookie(Constants.LOGIN_URL)
-//                ?.split(";")
-//                ?.map { it.trim() }
-//                ?.forEach { cookie ->
-//                    val parts = cookie.split("=", limit = 2)
-//                    if (parts.size == 2) {
-//                        val name = parts.getOrNull(0)
-//                        val value = parts.getOrNull(1)
-//
-//                        when (name) {
-//                            "passToken" -> {
-//                                currentUser.passToken = value!!
-//                            }
-//
-//                            "userId" -> {
-//                                currentUser.userId = value!!
-//                            }
-//
-//                            "deviceId" -> {
-//                                currentUser.deviceId = value!!
-//                            }
-//                        }
-//
-//                        if (currentUser.hasValues) {
-//                            currentOnSaveUser(currentUser)
-//                        }
-//                    }
-//                }
+                        if (authManager.isLoggedIn) {
+                            onLoginSuccess()
+                            return@forEach
+                        }
+                    }
+                }
         }
     }
 
@@ -156,10 +126,7 @@ fun LoginScreen(
                     settings.loadWithOverviewMode = true
 
                     this.webViewClient = webViewClient
-
-                    addJavascriptInterface(WebAppInterface(), "AndroidInterface")
-
-                    loadUrl(Constants.LOGIN_URL)
+                    loadUrl(LOGIN_URL)
                 }.also { webView = it }
             })
 

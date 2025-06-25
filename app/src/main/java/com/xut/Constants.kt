@@ -21,32 +21,30 @@ object Constants {
     const val UNLOCK_HMAC_KEY = "2tBeoEyJTunmWUGq7bQH2Abn0k2NhhurOaqBfyxCuLVgn4AVj7swcawe53uDUno"
     const val DEFAULT_IV = "0102030405060708"
 
-    // @formatter:off
     val regions = listOf(
-        Region("Global", "unlock.update.intl.miui.com"),
-        Region("India", "in-unlock.update.intl.miui.com"),
-        Region("Russia", "ru-unlock.update.intl.miui.com"),
-        Region("Europe", "eu-unlock.update.intl.miui.com"),
-        Region("China", "unlock.update.miui.com")
+        Region(R.string.region_global, "unlock.update.intl.miui.com"),
+        Region(R.string.region_india, "in-unlock.update.intl.miui.com"),
+        Region(R.string.region_russia, "ru-unlock.update.intl.miui.com"),
+        Region(R.string.region_europe, "eu-unlock.update.intl.miui.com"),
+        Region(R.string.region_china, "unlock.update.miui.com")
     )
 
     val meanings = listOf(
-        Meaning(10000, "Request parameter error (This can be caused by entering invalid token or product)"),
-        Meaning(10001, "Signature verification failed"),
-        Meaning(10002, "The same IP request too often (Too many tries)"),
-        Meaning(10003, "Internal server error"),
-        Meaning(10004, "Request has expired"),
-        Meaning(10005, "Invalid Nonce request"),
-        Meaning(10006, "Client version is too low"),
-        Meaning(20030, "You have already unlocked a device recently\nYou should wait at least 30 days from the first unlock to unlock another device"),
-        Meaning(20031, "This device is not bound to your account\nTurn on your device and bind your account to the device by going in MIUI's Settings > Developer options > Mi Unlock status"),
-        Meaning(20032, "Failed to generate signature value required to unlock"),
-        Meaning(20033, "User portrait scores too low or black"),
-        Meaning(20034, "Current account cannot unlock this device"),
-        Meaning(20035, "This tool is outdated, contact the developers"),
-        Meaning(20036, "Your account has been bound to this device for not enough time\nYou have to wait %d days and %d hours before you can unlock this device"),
-        Meaning(20037, "Unlock number has reached the upper limit"),
-        Meaning(20041, "Your Xiaomi account isn't associated with a phone number\nGo to account.xiaomi.com and associate it with your phone number")
+        Meaning(10000, R.string.meaning_10000),
+        Meaning(10001, R.string.meaning_10001),
+        Meaning(10002, R.string.meaning_10002),
+        Meaning(10003, R.string.meaning_10003),
+        Meaning(10004, R.string.meaning_10004),
+        Meaning(10005, R.string.meaning_10005),
+        Meaning(10006, R.string.meaning_10006),
+        Meaning(20030, R.string.meaning_10030),
+        Meaning(20031, R.string.meaning_10031),
+        Meaning(20032, R.string.meaning_10032),
+        Meaning(20033, R.string.meaning_10033),
+        Meaning(20034, R.string.meaning_10034),
+        Meaning(20035, R.string.meaning_10035),
+        Meaning(20036, R.string.meaning_10036),
+        Meaning(20037, R.string.meaning_10037),
+        Meaning(20041, R.string.meaning_10041)
     )
-    // @formatter:on
 }

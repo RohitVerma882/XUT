@@ -3,14 +3,15 @@ package com.xut.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+
 import com.xut.Constants
 import com.xut.domain.model.Auth
-import com.xut.domain.model.User
-import com.xut.domain.repository.UserRepository
+import com.xut.domain.repository.AuthRepository
 import com.xut.unlock.UnlockException
 import com.xut.unlock.UnlockRequest
 import com.xut.unlock.UnlockUtilities
 import com.xut.util.HttpUtils
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -18,53 +19,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
 import okhttp3.OkHttpClient
 import okhttp3.Request
+
 import org.apache.commons.codec.digest.DigestUtils
+
 import org.json.JSONException
 import org.json.JSONObject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UnlockViewModel(
-    private val userRepository: UserRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
-    val userState: StateFlow<UserState> = combine(
-        userRepository.user,
-        userRepository.hasUser
-    ) { user, hasUser ->
-        if (hasUser) {
-            UserState.HasUser(user)
-        } else {
-            UserState.NoUser
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UserState.NoUser
-    )
-
-    private val _unlockState = MutableStateFlow(UnlockState())
+    private val _unlockState = MutableStateFlow<UnlockState>(UnlockState.Idle())
     val unlockState: StateFlow<UnlockState> = _unlockState.asStateFlow()
 
-    fun saveUser(user: User) {
-        viewModelScope.launch {
-            userRepository.save(user)
-        }
-    }
 
-    fun clearUser() {
+    fun startUnlock(host: String, product: String, token: String) {
         viewModelScope.launch {
-            userRepository.clear()
-        }
-    }
-
-    fun startUnlock(user: User, host: String, product: String, token: String) {
-        viewModelScope.launch {
-            val pcId = DigestUtils.md5Hex(user.deviceId)
+            val pcId = DigestUtils.md5Hex("")
             var ssecurity: String? = null
             var nonce: String? = null
             var location: String? = null
@@ -81,9 +58,9 @@ class UnlockViewModel(
                         .build()
 
                     val cookiesMap = linkedMapOf(
-                        "userId" to user.userId,
-                        "passToken" to user.passToken,
-                        "deviceId" to user.deviceId
+                        "userId" to "",
+                        "passToken" to "",
+                        "deviceId" to ""
                     )
 
                     var request = Request.Builder()
@@ -143,7 +120,7 @@ class UnlockViewModel(
             }
 
             val auth = Auth(
-                userId = user.userId,
+                userId = "",
                 pcId = pcId,
                 ssecurity = ssecurity!!,
                 serviceToken = serviceToken!!,
@@ -173,14 +150,14 @@ class UnlockViewModel(
                     unlockToken = jsonObject.optString("encryptData", null)
 
                     if (code != 0 || unlockToken.isEmpty()) {
-                        val description2 = UnlockUtilities.getMeaning(code, jsonObject)
+//                        val description2 = UnlockUtilities.getMeaning(code, jsonObject)
                         val messageBuilder = StringBuilder().apply {
                             append("Xiaomi server returned error: ")
                             append(code)
                             append('\n')
-                            append("Tool description: ")
-                            append(description2)
-                            append('\n')
+//                            append("Tool description: ")
+//                            append(description2)
+//                            append('\n')
                             append("Server description: ")
                             append(description)
                         }
@@ -203,23 +180,21 @@ class UnlockViewModel(
 
 @Suppress("UNCHECKED_CAST")
 class UnlockViewModelFactory(
-    private val userRepository: UserRepository
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(UnlockViewModel::class.java)) {
-            return UnlockViewModel(userRepository) as T
+            return UnlockViewModel(authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
-sealed class UserState {
-    object NoUser : UserState()
-    data class HasUser(val user: User) : UserState()
-}
+sealed class UnlockState {
+    data class Idle(
+        val results: List<String> = emptyList(),
+        val token: String? = null
+    ) : UnlockState()
 
-data class UnlockState(
-    val isRunning: Boolean = false,
-    val output: String? = null,
-    val token: String? = null,
-)
+    object Running : UnlockState()
+}

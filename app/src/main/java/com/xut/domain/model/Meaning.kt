@@ -1,7 +1,9 @@
 package com.xut.domain.model
 
+import androidx.annotation.StringRes
+
 data class Meaning(
     val code: Int,
-    val message: String
+    @StringRes val messageId: Int
 )
 
