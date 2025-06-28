@@ -1,85 +1,87 @@
 package com.xut.util
 
-import android.content.Context
-import android.content.SharedPreferences
-
 import androidx.annotation.GuardedBy
-import androidx.core.content.edit
 
-class AuthManager private constructor(private val sharedPref: SharedPreferences) {
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+class AuthManager private constructor() {
     private val lock = Any()
+
+    @GuardedBy("lock")
+    private var _userId: String = ""
+
+    @GuardedBy("lock")
+    private var _passToken: String = ""
+
+    @GuardedBy("lock")
+    private var _deviceId: String = ""
 
     @GuardedBy("lock")
     private val listeners: MutableSet<Listener> = hashSetOf()
 
-    val userId: String?
+    var userId: String
         get() {
             synchronized(lock) {
-                return sharedPref.getString(USER_ID, null)
+                return _userId
             }
         }
-
-    val passToken: String?
-        get() {
+        set(value) {
             synchronized(lock) {
-                return sharedPref.getString(PASS_TOKEN, null)
+                _userId = value
             }
+            notifyLoginState()
         }
 
-    val deviceId: String?
+    var passToken: String
         get() {
             synchronized(lock) {
-                return sharedPref.getString(DEVICE_ID, null)
+                return _passToken
+            }
+        }
+        set(value) {
+            synchronized(lock) {
+                _passToken = value
+            }
+            notifyLoginState()
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    var deviceId: String
+        get() {
+            synchronized(lock) {
+                if (_deviceId.isEmpty()) {
+                    _deviceId = "wb_${Uuid.random()}"
+                }
+                return _deviceId
+            }
+        }
+        set(value) {
+            synchronized(lock) {
+                _deviceId = value
             }
         }
 
     val isLoggedIn: Boolean
         get() {
-            return userId != null && passToken != null && deviceId != null
-        }
-
-    fun setUserId(value: String) {
-        synchronized(lock) {
-            sharedPref.edit {
-                putString(USER_ID, value)
+            synchronized(lock) {
+                return _userId.isNotEmpty() && _passToken.isNotEmpty()
             }
         }
-        notifyLoginStateChanged(isLoggedIn)
-    }
-
-    fun setPassToken(value: String) {
-        synchronized(lock) {
-            sharedPref.edit {
-                putString(PASS_TOKEN, value)
-            }
-        }
-        notifyLoginStateChanged(isLoggedIn)
-    }
-
-    fun setDeviceId(value: String) {
-        synchronized(lock) {
-            sharedPref.edit {
-                putString(DEVICE_ID, value)
-            }
-        }
-        notifyLoginStateChanged(isLoggedIn)
-    }
 
     fun logOut() {
         synchronized(lock) {
-            sharedPref.edit {
-                remove(USER_ID)
-                remove(PASS_TOKEN)
-                remove(DEVICE_ID)
-            }
+            _userId = ""
+            _passToken = ""
+            _deviceId = ""
         }
-        notifyLoginStateChanged(false)
+        notifyLoginState()
     }
 
-    private fun notifyLoginStateChanged(isLoggedIn: Boolean) {
+    private fun notifyLoginState() {
         synchronized(lock) {
             listeners.forEach {
-                it.onLoginStateChanged(isLoggedIn)
+                it.onLoginStateChanged()
             }
         }
     }
@@ -93,28 +95,21 @@ class AuthManager private constructor(private val sharedPref: SharedPreferences)
     }
 
     interface Listener {
-        fun onLoginStateChanged(isLoggedIn: Boolean)
+        fun onLoginStateChanged()
     }
 
     companion object {
-        private const val PREFS_NAME = ".AUTH"
-        const val USER_ID = "userId"
-        const val PASS_TOKEN = "passToken"
-        const val DEVICE_ID = "deviceId"
+        const val USER_ID_KEY = "userId"
+        const val PASS_TOKEN_KEY = "passToken"
+        const val DEVICE_ID_KEY = "deviceId"
 
         @Volatile
         private var instance: AuthManager? = null
 
         @Synchronized
-        fun getInstance(context: Context): AuthManager {
+        fun getInstance(): AuthManager {
             return instance ?: synchronized(this) {
-                instance ?: run {
-                    val sharedPref = context.applicationContext.getSharedPreferences(
-                        context.packageName + PREFS_NAME,
-                        Context.MODE_PRIVATE
-                    )
-                    AuthManager(sharedPref).also { instance = it }
-                }
+                instance ?: AuthManager().also { instance = it }
             }
         }
     }

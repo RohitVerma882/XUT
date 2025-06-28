@@ -1,25 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="region_global">Global</string>
-    <string name="region_india">India</string>
-    <string name="region_russia">Russia</string>
-    <string name="region_europe">Europe</string>
-    <string name="region_china">China</string>
-
-    <string name="meaning_10000">Request parameter error (This can be caused by entering invalid token or product).</string>
-    <string name="meaning_10001">Signature verification failed.</string>
-    <string name="meaning_10002">The same IP request too often (Too many tries).</string>
-    <string name="meaning_10003">Internal server error.</string>
-    <string name="meaning_10004">Request has expired.</string>
-    <string name="meaning_10005">Invalid Nonce request.</string>
-    <string name="meaning_10006">Client version is too low.</string>
-    <string name="meaning_10030">You have already unlocked a device recently. You should wait at least 30 days from the first unlock to unlock another device.</string>
-    <string name="meaning_10031">This device is not bound to your account. Turn on your device and bind your account to the device by going in MIUI\'s Settings > Developer options > Mi Unlock status.</string>
-    <string name="meaning_10032">Failed to generate signature value required to unlock.</string>
-    <string name="meaning_10033">User portrait scores too low or black.</string>
-    <string name="meaning_10034">Current account cannot unlock this device.</string>
-    <string name="meaning_10035">This tool is outdated, contact the developers.</string>
-    <string name="meaning_10036">Your account has been bound to this device for not enough time. You have to wait %d days and %d hours before you can unlock this device.</string>
-    <string name="meaning_10037">Unlock number has reached the upper limit.</string>
-    <string name="meaning_10041">Your Xiaomi account isn\'t associated with a phone number. Go to account.xiaomi.com and associate it with your phone number.</string>
+    <string name="copy_auth_data_message">Copied auth data to clipboard.</string>
 </resources>
