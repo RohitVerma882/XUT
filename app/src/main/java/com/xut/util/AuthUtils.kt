@@ -27,7 +27,7 @@ object AuthUtils {
             try {
                 writeData(writer, manager)
             } catch (e: IOException) {
-                stringWriter.write(e.toString())
+                return e.toString()
             }
         }
         return stringWriter.toString()

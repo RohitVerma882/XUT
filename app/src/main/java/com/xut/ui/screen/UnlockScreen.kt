@@ -4,14 +4,16 @@ import android.content.ClipData
 import android.webkit.CookieManager
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
@@ -90,7 +92,7 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                     }
                 },
                 actions = {
-                    val copyAuthDataMessage = stringResource(R.string.copy_auth_data_message)
+                    val authDataCopyMessage = stringResource(R.string.unlock_auth_data_copy_message)
                     IconButton(onClick = {
                         coroutineScope.launch {
                             val clipData = ClipData.newPlainText(
@@ -98,7 +100,7 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                                 AuthUtils.asDataString(authManager)
                             )
                             clipboard.setClipEntry(clipData.toClipEntry())
-                            snackbarHostState.showSnackbar(copyAuthDataMessage)
+                            snackbarHostState.showSnackbar(authDataCopyMessage)
                         }
                     }) {
                         Icon(
@@ -131,12 +133,20 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            OutlinedCard(modifier = Modifier.fillMaxSize()) {
-                SelectionContainer {
+            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        modifier = Modifier.padding(16.dp),
+                        text = stringResource(R.string.unlock_auth_data_legacy),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
                         text = AuthUtils.asDataString(authManager),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
