@@ -28,18 +28,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+            val authManager = AuthManager.getInstance()
+
             var isLoggedIn by rememberSaveable { mutableStateOf(false) }
 
             DisposableEffect(Unit) {
                 val listener = object : AuthManager.Listener {
-                    override fun onLoginStateChanged() {
-                        isLoggedIn = AuthManager.getInstance().isLoggedIn
+                    override fun onLoginChange() {
+                        isLoggedIn = authManager.isLoggedIn
                     }
                 }
 
-                AuthManager.getInstance().registerListener(listener)
+                authManager.registerListener(listener)
                 onDispose {
-                    AuthManager.getInstance().unregisterListener(listener)
+                    authManager.unregisterListener(listener)
                 }
             }
 

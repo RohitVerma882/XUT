@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.webkit.WebSettings
 import android.webkit.WebView
 
 import androidx.activity.compose.BackHandler
@@ -24,12 +25,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import androidx.webkit.WebViewClientCompat
 
+import com.xut.Constants.DEVICE_ID_KEY
 import com.xut.Constants.LOGIN_URL
+import com.xut.Constants.PASS_TOKEN_KEY
+import com.xut.Constants.USER_ID_KEY
 import com.xut.util.AuthManager
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier) {
+    val authManager = AuthManager.getInstance()
+    val cookieManager = CookieManager.getInstance()
+
     var webView by remember { mutableStateOf<WebView?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var canGoBack by remember { mutableStateOf(false) }
@@ -52,9 +59,12 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     )
 
                     settings.javaScriptEnabled = true
+                    @Suppress("DEPRECATION")
+                    settings.databaseEnabled = true
                     settings.domStorageEnabled = true
                     settings.useWideViewPort = true
                     settings.loadWithOverviewMode = true
+                    settings.cacheMode = WebSettings.LOAD_DEFAULT
 
                     webViewClient = object : WebViewClientCompat() {
                         override fun onPageStarted(
@@ -77,30 +87,30 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                             super.onPageFinished(view, url)
                             isLoading = false
 
-                            CookieManager.getInstance().getCookie(LOGIN_URL)
+                            cookieManager.getCookie(LOGIN_URL)
                                 ?.split(";")
                                 ?.map { it.trim() }
                                 ?.forEach { cookie ->
                                     val parts = cookie.split("=", limit = 2)
                                     if (parts.size == 2) {
-                                        val name = parts.getOrNull(0)
-                                        val value = parts.getOrNull(1)
+                                        val name = parts.getOrNull(0)?.trim()
+                                        val value = parts.getOrNull(1)?.trim()
 
                                         when (name) {
-                                            AuthManager.PASS_TOKEN_KEY -> {
-                                                AuthManager.getInstance().passToken = value!!
+                                            PASS_TOKEN_KEY -> {
+                                                authManager.passToken = value!!
                                             }
 
-                                            AuthManager.USER_ID_KEY -> {
-                                                AuthManager.getInstance().userId = value!!
+                                            USER_ID_KEY -> {
+                                                authManager.userId = value!!
                                             }
 
-                                            AuthManager.DEVICE_ID_KEY -> {
-                                                AuthManager.getInstance().deviceId = value!!
+                                            DEVICE_ID_KEY -> {
+                                                authManager.deviceId = value!!
                                             }
                                         }
 
-                                        if (AuthManager.getInstance().isLoggedIn) {
+                                        if (authManager.isLoggedIn) {
                                             return@forEach
                                         }
                                     }
@@ -109,9 +119,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     }
 
                     webView = this
-                    CookieManager.getInstance().run {
+                    cookieManager.run {
                         setAcceptCookie(true)
-                        setAcceptThirdPartyCookies(webView, true)
+                        setAcceptThirdPartyCookies(this@apply, true)
                     }
                     loadUrl(LOGIN_URL)
                 }

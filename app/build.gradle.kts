@@ -67,11 +67,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.googlefonts)
-
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewModel.compose)
-
     implementation(libs.androidx.webkit)
 
     implementation(libs.kotlinx.coroutines.core)

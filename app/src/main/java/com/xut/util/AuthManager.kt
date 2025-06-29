@@ -2,9 +2,6 @@ package com.xut.util
 
 import androidx.annotation.GuardedBy
 
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-
 class AuthManager private constructor() {
     private val lock = Any()
 
@@ -21,52 +18,35 @@ class AuthManager private constructor() {
     private val listeners: MutableSet<Listener> = hashSetOf()
 
     var userId: String
-        get() {
-            synchronized(lock) {
-                return _userId
-            }
-        }
+        get() = synchronized(lock) { _userId }
         set(value) {
             synchronized(lock) {
                 _userId = value
             }
-            notifyLoginState()
+            notifyLoginChange()
         }
 
     var passToken: String
-        get() {
-            synchronized(lock) {
-                return _passToken
-            }
-        }
+        get() = synchronized(lock) { _passToken }
         set(value) {
             synchronized(lock) {
                 _passToken = value
             }
-            notifyLoginState()
+            notifyLoginChange()
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     var deviceId: String
-        get() {
-            synchronized(lock) {
-                if (_deviceId.isEmpty()) {
-                    _deviceId = "wb_${Uuid.random()}"
-                }
-                return _deviceId
-            }
-        }
+        get() = synchronized(lock) { _deviceId }
         set(value) {
             synchronized(lock) {
                 _deviceId = value
             }
+            notifyLoginChange()
         }
 
     val isLoggedIn: Boolean
-        get() {
-            synchronized(lock) {
-                return _userId.isNotEmpty() && _passToken.isNotEmpty()
-            }
+        get() = synchronized(lock) {
+            _userId.isNotEmpty() && _passToken.isNotEmpty() && _deviceId.isNotEmpty()
         }
 
     fun logOut() {
@@ -75,38 +55,30 @@ class AuthManager private constructor() {
             _passToken = ""
             _deviceId = ""
         }
-        notifyLoginState()
+        notifyLoginChange()
     }
 
-    private fun notifyLoginState() {
-        synchronized(lock) {
-            listeners.forEach {
-                it.onLoginStateChanged()
-            }
-        }
+    private fun notifyLoginChange() {
+        synchronized(lock) { listeners.toList() }
+            .forEach { it.onLoginChange() }
     }
 
-    fun registerListener(listener: Listener) {
-        synchronized(lock) { listeners.add(listener) }
+    fun registerListener(listener: Listener) = synchronized(lock) {
+        listeners.add(listener)
     }
 
-    fun unregisterListener(listener: Listener) {
-        synchronized(lock) { listeners.remove(listener) }
+    fun unregisterListener(listener: Listener) = synchronized(lock) {
+        listeners.remove(listener)
     }
 
     interface Listener {
-        fun onLoginStateChanged()
+        fun onLoginChange()
     }
 
     companion object {
-        const val USER_ID_KEY = "userId"
-        const val PASS_TOKEN_KEY = "passToken"
-        const val DEVICE_ID_KEY = "deviceId"
-
         @Volatile
         private var instance: AuthManager? = null
 
-        @Synchronized
         fun getInstance(): AuthManager {
             return instance ?: synchronized(this) {
                 instance ?: AuthManager().also { instance = it }
