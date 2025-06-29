@@ -137,7 +137,8 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = stringResource(R.string.unlock_auth_data_legacy),
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
