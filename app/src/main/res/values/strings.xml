@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unlock_auth_data_copy_message">Copied auth data to clipboard.</string>
+    <string name="unlock_auth_data_legacy">Auth Data (Legacy)</string>
+</resources>

@@ -1,0 +1,5 @@
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+-repackageclasses
