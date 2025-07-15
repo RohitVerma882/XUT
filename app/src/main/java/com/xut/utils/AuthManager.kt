@@ -15,7 +15,7 @@ class AuthManager private constructor() {
     private var _deviceId: String = ""
 
     @GuardedBy("lock")
-    private val listeners: MutableSet<Listener> = hashSetOf()
+    private val listeners: MutableList<Listener> = mutableListOf()
 
     var userId: String
         get() = synchronized(lock) { _userId }
@@ -63,11 +63,11 @@ class AuthManager private constructor() {
             .forEach { it.onLoginChange() }
     }
 
-    fun registerListener(listener: Listener) = synchronized(lock) {
+    fun addListener(listener: Listener) = synchronized(lock) {
         listeners.add(listener)
     }
 
-    fun unregisterListener(listener: Listener) = synchronized(lock) {
+    fun removeListener(listener: Listener) = synchronized(lock) {
         listeners.remove(listener)
     }
 

@@ -50,19 +50,18 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UnlockScreen(modifier: Modifier = Modifier) {
+fun UnlockScreen() {
     val authManager = AuthManager.getInstance()
     val cookieManager = CookieManager.getInstance()
+    val clipboard = LocalClipboard.current
+    val uriHandler = LocalUriHandler.current
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val clipboard = LocalClipboard.current
-    val uriHandler = LocalUriHandler.current
-
     Scaffold(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -74,16 +73,18 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            cookieManager.run {
-                                removeSessionCookies(null)
-                                removeAllCookies(null)
-                                flush()
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                cookieManager.run {
+                                    removeSessionCookies(null)
+                                    removeAllCookies(null)
+                                    flush()
+                                }
+                                authManager.logOut()
                             }
-                            authManager.logOut()
                         }
-                    }) {
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_logout),
                             contentDescription = null
@@ -92,26 +93,30 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                 },
                 actions = {
                     val authDataCopyMessage = stringResource(R.string.unlock_auth_data_copy_message)
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            val clipData = ClipData.newPlainText(
-                                "auth data",
-                                AuthUtils.asDataString(authManager)
-                            )
-                            clipboard.setClipEntry(clipData.toClipEntry())
-                            snackbarHostState.showSnackbar(authDataCopyMessage)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                val clipData = ClipData.newPlainText(
+                                    "Auth Data",
+                                    AuthUtils.asDataString(authManager)
+                                )
+                                clipboard.setClipEntry(clipData.toClipEntry())
+                                snackbarHostState.showSnackbar(authDataCopyMessage)
+                            }
                         }
-                    }) {
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_content_copy),
                             contentDescription = null
                         )
                     }
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            uriHandler.openUri(Constants.GITHUB_SOURCE_CODE_URL)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                uriHandler.openUri(Constants.GITHUB_SOURCE_CODE_URL)
+                            }
                         }
-                    }) {
+                    ) {
                         Icon(Icons.Outlined.Info, contentDescription = null)
                     }
                 },
@@ -129,8 +134,12 @@ fun UnlockScreen(modifier: Modifier = Modifier) {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
                     Text(
                         text = stringResource(R.string.unlock_auth_data_legacy),
                         style = MaterialTheme.typography.titleSmall.copy(

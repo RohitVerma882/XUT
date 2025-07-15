@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -29,24 +30,26 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val authManager = AuthManager.getInstance()
-
             var isLoggedIn by remember { mutableStateOf(false) }
 
             DisposableEffect(Unit) {
-                val listener = object : AuthManager.Listener {
+                val authListener = object : AuthManager.Listener {
                     override fun onLoginChange() {
                         isLoggedIn = authManager.isLoggedIn
                     }
                 }
 
-                authManager.registerListener(listener)
+                authManager.addListener(authListener)
                 onDispose {
-                    authManager.unregisterListener(listener)
+                    authManager.removeListener(authListener)
                 }
             }
 
             XUTTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     Crossfade(isLoggedIn) { isLoggedIn ->
                         if (isLoggedIn) {
                             UnlockScreen()

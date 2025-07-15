@@ -33,7 +33,7 @@ import com.xut.utils.AuthManager
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen() {
     val authManager = AuthManager.getInstance()
     val cookieManager = CookieManager.getInstance()
 
@@ -46,7 +46,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
@@ -129,7 +129,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
         if (isLoading) {
             webView?.isVisible = false
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
         } else {
             webView?.isVisible = true
         }
